@@ -1,0 +1,11 @@
+{
+  "name": "shamirror",
+  "version": "1.0.0",
+  "description": "check mirrored paths",
+  "main": "shamirror.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
