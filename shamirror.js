@@ -13,22 +13,22 @@ const walkdir = (dirname, fileFunc, dirFunc, walkdirDone) => {
         walkdirFunc(filename, eachDone) :
         fileFunc(filename, eachDone);
     };
-    async.each(entries, iteratee, walkDone);
+    async.map(entries, iteratee, (err, shas) => walkDone(shas.join('')));
   };
-  const walkdirFunc = (name, done) => walk(name, () => dirFunc(name, done));
+  const walkdirFunc = (name, done) => walk(name, (shas) => dirFunc(name, shas, done));
   walkdirFunc(dirname, walkdirDone);
 };
 
 const printShaLine = (filename, done) => {
   const content = fs.readFileSync(filename);
   const sha = crypto.createHash('sha256').update(content).digest('hex');
-  console.log(sha, filename);
-  done();
+  const log = `${sha} ${filename}\n`;
+  done(null, log);
 };
 
-const printLine = (filename, done) => {
-  console.log(filename);
-  done();
+const printLine = (filename, shas, done) => {
+  const log = `${filename}\n${shas}`;
+  done(null, log);
 };
 
 const argv = minimist(process.argv.slice(2));
@@ -39,5 +39,12 @@ if (argv._.length != 2) {
 
 const [origDir, mirrorDir] = argv._;
 
-walkdir(origDir, printShaLine, printLine, () => console.log('done orig'));
-walkdir(mirrorDir, printShaLine, printLine, () => console.log('done mirror'));
+walkdir(origDir, printShaLine, printLine, (err, shas) => {
+  console.log('done orig');
+  console.log(shas);
+});
+
+walkdir(mirrorDir, printShaLine, printLine, (err, shas) => {
+  console.log('done mirror');
+  console.log(shas);
+});
