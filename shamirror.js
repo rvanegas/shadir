@@ -19,6 +19,18 @@ const walkdir = (dirname, fileFunc, dirFunc, walkdirDone) => {
   walkdirFunc(dirname, walkdirDone);
 };
 
+const printShaLine = (filename, done) => {
+  const content = fs.readFileSync(filename);
+  const sha = crypto.createHash('sha256').update(content).digest('hex');
+  console.log(sha, filename);
+  done();
+};
+
+const printLine = (filename, done) => {
+  console.log(filename);
+  done();
+};
+
 const argv = minimist(process.argv.slice(2));
 if (argv._.length != 2) {
   console.log('usage: <orig> <mirror>');
@@ -27,14 +39,5 @@ if (argv._.length != 2) {
 
 const [origDir, mirrorDir] = argv._;
 
-const printLine = (filename, done) => {
-  setTimeout(() => {
-    console.log(filename);
-    done();
-  }, Math.random() * 1000);
-//   const content = fs.readFileSync(filename);
-//   const sha = crypto.createHash('sha256').update(content).digest('hex');
-};
-
-walkdir(origDir, printLine, printLine, () => console.log('done orig'));
-walkdir(mirrorDir, printLine, printLine, () => console.log('done mirror'));
+walkdir(origDir, printShaLine, printLine, () => console.log('done orig'));
+walkdir(mirrorDir, printShaLine, printLine, () => console.log('done mirror'));
