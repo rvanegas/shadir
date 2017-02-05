@@ -4,16 +4,19 @@ const async = require('async');
 const path = require('path');
 const fs = require('fs');
 
-const walkdir = (dirname, fn, walkdirDone) => {
-  const entries = fs.readdirSync(dirname);
-  async.each(entries, (basename, eachDone) => {
-    const filename = path.join(dirname, basename);
-    fs.statSync(filename).isDirectory() ?
-      walkdir(filename, fn, eachDone) :
-      fn(filename, eachDone);
-  }, (err) => {
-    walkdirDone()
-  });
+const walkdir = (dirname, fileFunc, dirFunc, walkdirDone) => {
+  const walk = (dirname, walkDone) => {
+    const entries = fs.readdirSync(dirname);
+    const iteratee = (basename, eachDone) => {
+      const filename = path.join(dirname, basename);
+      fs.statSync(filename).isDirectory() ?
+        walkdirFunc(filename, eachDone) :
+        fileFunc(filename, eachDone);
+    };
+    async.each(entries, iteratee, walkDone);
+  };
+  const walkdirFunc = (name, done) => walk(name, () => dirFunc(name, done));
+  walkdirFunc(dirname, walkdirDone);
 };
 
 const argv = minimist(process.argv.slice(2));
@@ -28,10 +31,10 @@ const printLine = (filename, done) => {
   setTimeout(() => {
     console.log(filename);
     done();
-  }, Math.random() * 10000);
+  }, Math.random() * 1000);
 //   const content = fs.readFileSync(filename);
 //   const sha = crypto.createHash('sha256').update(content).digest('hex');
 };
 
-walkdir(origDir, printLine, () => console.log('done orig'));
-walkdir(mirrorDir, printLine, () => console.log('done mirror'));
+walkdir(origDir, printLine, printLine, () => console.log('done orig'));
+walkdir(mirrorDir, printLine, printLine, () => console.log('done mirror'));
