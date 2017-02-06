@@ -19,27 +19,32 @@ const walkdir = (dirname, fileFunc, dirFunc, walkdirDone) => {
   walkdirFunc(dirname, walkdirDone);
 };
 
-const printShaLine = (filename, done) => {
-  const hash = crypto.createHash('sha256');
-  const input = fs.createReadStream(filename);
-  // let count = 0;
-  input.on('readable', () => {
-    const data = input.read();
-    if (data) {
-      // console.log(filename, count);
-      count += 1;
-      hash.update(data);
-    }
-    else {
-      // console.log(filename, count);
-      const sha = hash.digest('hex');
-      const log = `${sha} ${filename}\n`;
-      done(null, log);
-    }
-  });
+const queue = async.queue((task, done) => task(done), 4);
+
+const handleFile = (filename, done) => {
+  const task = (taskDone) => {
+    const hash = crypto.createHash('sha256');
+    const input = fs.createReadStream(filename);
+    let count = 0;
+    input.on('readable', () => {
+      const data = input.read();
+      if (data) {
+        console.log(count);
+        count += 1;
+        hash.update(data);
+      }
+      else {
+        console.log(count);
+        const sha = hash.digest('hex');
+        const log = `${sha} ${filename}\n`;
+        taskDone(null, log);
+      }
+    });
+  };
+  queue.push(task, done);
 };
 
-const printLine = (filename, shas, done) => {
+const handleDir = (filename, shas, done) => {
   const log = `${filename}\n${shas}`;
   done(null, log);
 };
@@ -52,7 +57,7 @@ if (argv._.length != 2) {
 
 const [origDir, mirrorDir] = argv._;
 
-walkdir(origDir, printShaLine, printLine, (err, shas) => {
+walkdir(origDir, handleFile, handleDir, (err, shas) => {
   console.log('done orig');
   console.log(shas);
 });
