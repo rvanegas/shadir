@@ -25,16 +25,12 @@ const handleFile = (filename, done) => {
   const task = (taskDone) => {
     const hash = crypto.createHash('sha256');
     const input = fs.createReadStream(filename);
-    let count = 0;
     input.on('readable', () => {
       const data = input.read();
       if (data) {
-        console.log(count);
-        count += 1;
         hash.update(data);
       }
       else {
-        console.log(count);
         const sha = hash.digest('hex');
         const log = `${sha} ${filename}\n`;
         taskDone(null, log);
