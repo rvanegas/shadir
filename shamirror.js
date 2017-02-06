@@ -20,10 +20,22 @@ const walkdir = (dirname, fileFunc, dirFunc, walkdirDone) => {
 };
 
 const printShaLine = (filename, done) => {
-  fs.readFile(filename, (err, content) => {
-    const sha = crypto.createHash('sha256').update(content).digest('hex');
-    const log = `${sha} ${filename}\n`;
-    done(null, log);
+  const hash = crypto.createHash('sha256');
+  const input = fs.createReadStream(filename);
+  // let count = 0;
+  input.on('readable', () => {
+    const data = input.read();
+    if (data) {
+      // console.log(filename, count);
+      count += 1;
+      hash.update(data);
+    }
+    else {
+      // console.log(filename, count);
+      const sha = hash.digest('hex');
+      const log = `${sha} ${filename}\n`;
+      done(null, log);
+    }
   });
 };
 
