@@ -1,8 +1,8 @@
 {
-  "name": "shamirror",
+  "name": "shadir",
   "version": "1.0.0",
-  "description": "check mirrored paths",
-  "main": "shamirror.js",
+  "description": "sha for filesystem",
+  "main": "shadir.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
