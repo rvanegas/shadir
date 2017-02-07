@@ -7,7 +7,7 @@ const _ = require('lodash');
 
 const ignoreFiles = ['.shadir', '.DS_Store'];
 
-const walkdir = (dirname, fileFunc, dirFunc, walkdirDone) => {
+const walkdir = (dirname, fileFunc, dirFunc) => {
   const walk = (dirname, walkDone) => {
     const entries = _.difference(fs.readdirSync(dirname), ignoreFiles);
     const iteratee = (basename, eachDone) => {
@@ -18,7 +18,7 @@ const walkdir = (dirname, fileFunc, dirFunc, walkdirDone) => {
     };
     async.map(entries, iteratee, (err, values) => dirFunc(dirname, entries, values, walkDone));
   };
-  walk(dirname, value => walkdirDone(null, value));
+  walk(dirname, _.noop);
 };
 
 const queue = async.queue((task, done) => task(done), 4);
@@ -40,8 +40,17 @@ const handleDir = (dirname, entries, values, done) => {
   const sorted = _.sortBy(zipped, val => val[1]);
   const content = sorted.map(pair => pair.join(' ') + '\n').join('');
   const shadirFilename = path.join(dirname, '.shadir');
-  fs.writeFileSync(shadirFilename, content);
-  handleFile(shadirFilename, (err, value) => done(value));
+  if (saveOption) {
+    fs.writeFileSync(shadirFilename, content);
+  } else {
+    const oldContent = fs.readFileSync(shadirFilename);
+    if (oldContent != content) {
+      console.log(dirname);
+      console.log(content);
+    }
+  }
+  const hash = crypto.createHash('sha256').update(content).digest('hex');
+  done(hash);
 };
 
 const argv = minimist(process.argv.slice(2), {boolean: ['s']});
@@ -50,8 +59,6 @@ if (argv._.length != 1) {
   process.exit(1);
 }
 
-const [origDir, mirrorDir] = argv._;
-
-walkdir(origDir, handleFile, handleDir, (err) => {
-  console.log('done orig');
-});
+const [dir] = argv._;
+const saveOption = argv.s;
+walkdir(dir, handleFile, handleDir);
