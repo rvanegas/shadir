@@ -8,16 +8,16 @@ const _ = require('lodash');
 
 const ignoreFiles = ['.shadir', '.DS_Store'];
 
-const walkdir = (dirname, fileFunc, dirFunc) => {
+const walkdir = (dirname) => {
   const recurse = (dirname, done) => {
     const entries = _.difference(fs.readdirSync(dirname), ignoreFiles);
     const iteratee = (basename, eachDone) => {
       const filename = path.join(dirname, basename);
       fs.statSync(filename).isDirectory() ?
         recurse(filename, value => eachDone(null, value)) :
-        fileFunc(filename, eachDone);
+        handleFile(filename, eachDone);
     };
-    async.map(entries, iteratee, (err, values) => dirFunc(dirname, entries, values, done));
+    async.map(entries, iteratee, (err, values) => handleDir(dirname, entries, values, done));
   };
   recurse(dirname, _.noop);
 };
@@ -68,10 +68,10 @@ const shadiff = (a, b) => {
 
 const argv = minimist(process.argv.slice(2), {boolean: ['s']});
 if (argv._.length != 1) {
-  console.log('usage: shadir [-s] <dir>', argv);
+  console.log('usage: shadir [-s] <dirname>', argv);
   process.exit(1);
 }
 
-const [dir] = argv._;
+const [dirname] = argv._;
 const saveOption = argv.s;
-walkdir(dir, handleFile, handleDir);
+walkdir(dirname);
