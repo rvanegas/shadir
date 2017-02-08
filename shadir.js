@@ -40,10 +40,14 @@ const hashDir = (dirname, entries, values, done) => {
   if (saveOption) {
     fs.writeFileSync(shadirFilename, content);
   } else {
-    const oldContent = fs.readFileSync(shadirFilename, 'utf8');
-    if (oldContent != content) {
-      console.log(`d ${dirname}`);
-      console.log(shaDiff(oldContent, content));
+    try {
+      const oldContent = fs.readFileSync(shadirFilename, 'utf8');
+      if (oldContent != content) {
+        console.log(`d ${dirname}`);
+        console.log(shaDiff(oldContent, content));
+      }
+    } catch (e) {
+      console.log(`e ${dirname}`);
     }
   }
   const hash = crypto.createHash('sha256').update(content).digest('hex');
@@ -72,7 +76,7 @@ if (argv._.length != 1) {
   console.log('usage: shadir [-s] <dirname>', argv);
   process.exit(1);
 }
-
 const [dirname] = argv._;
 const saveOption = argv.s;
+
 walkDir();
