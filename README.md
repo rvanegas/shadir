@@ -2,10 +2,10 @@
 
 ### Usage
 
-Save shas of directory
+Save directory SHAs
 
 `shadir -s <dir>`
 
-Verify shas of directory
+Verify directory SHAs
 
 `shadir <dir>`
