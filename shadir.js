@@ -17,7 +17,10 @@ const hashFile = (filename, done) => {
       data ? hash.update(data) : taskDone(null, hash.digest('hex'));
     });
   };
-  queue.push(task, done);
+  queue.push(task, (err, val) => {
+    if (optionVerbose) console.error(filename);
+    done(err, val);
+  });
 };
 
 const shaDiff = (a, b) => {
@@ -37,7 +40,7 @@ const hashDir = (dirname, entries, values, done) => {
   const sorted = _.sortBy(zipped, val => val[1]);
   const content = sorted.map(pair => pair.join(' ') + '\n').join('');
   const shadirFilename = path.join(dirname, '.shadir');
-  if (saveOption) {
+  if (optionSave) {
     fs.writeFileSync(shadirFilename, content);
   } else {
     try {
@@ -51,6 +54,7 @@ const hashDir = (dirname, entries, values, done) => {
     }
   }
   const hash = crypto.createHash('sha256').update(content).digest('hex');
+  if (optionVerbose) console.error(dirname);
   done(hash);
 };
 
@@ -71,12 +75,13 @@ const walkDir = () => {
   recurse(dirname, _.noop);
 };
 
-const argv = minimist(process.argv.slice(2), {boolean: ['s']});
+const argv = minimist(process.argv.slice(2), {boolean: ['s', 'v']});
 if (argv._.length != 1) {
-  console.log('usage: shadir [-s] <dirname>', argv);
+  console.log('usage: shadir [-s] <dirname>');
   process.exit(1);
 }
 const [dirname] = argv._;
-const saveOption = argv.s;
+const optionSave = argv.s;
+const optionVerbose = argv.v;
 
 walkDir();
